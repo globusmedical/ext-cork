@@ -1,0 +1,74 @@
+name: Cork v140 Spike
+
+on:
+  push:
+    branches:
+      - 'spike/**'
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  windows-v140:
+    name: v140 / ${{ matrix.configuration }}
+    runs-on: windows-2022
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        configuration: [Debug, Release]
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Build and validate v140
+        id: build
+        shell: pwsh
+        run: ./.github/scripts/Invoke-Spike.ps1 -Configuration ${{ matrix.configuration }} -InstallV140
+      - name: Upload diagnostics
+        id: logs
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: cork-spike-logs-${{ matrix.configuration }}
+          retention-days: 30
+          if-no-files-found: error
+          path: |
+            build/spike-logs/
+            build/windows-msvc-*/compile_commands.json
+            build/windows-msvc-*/CMakeFiles/CMakeConfigureLog.yaml
+            build/windows-msvc-*/Testing/Temporary/
+            build/consumer-*/Testing/Temporary/
+            build/vcpkg/buildtrees/**/*.log
+      - name: Upload Cork-only install tree
+        id: package
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: cork-spike-windows-v140-${{ matrix.configuration }}
+          retention-days: 30
+          if-no-files-found: warn
+          path: install/windows-x64/
+      - name: Overall spike verdict
+        if: always()
+        shell: pwsh
+        env:
+          BUILD_OUTCOME: ${{ steps.build.outcome }}
+          LOGS_OUTCOME: ${{ steps.logs.outcome }}
+          PACKAGE_OUTCOME: ${{ steps.package.outcome }}
+        run: |
+          $passed = $env:BUILD_OUTCOME -eq 'success' -and
+            $env:LOGS_OUTCOME -eq 'success' -and $env:PACKAGE_OUTCOME -eq 'success'
+          $verdict = if ($passed) { 'PASS' } else { 'FAILED' }
+          @(
+            "## Overall Spike: $verdict (${{ matrix.configuration }})",
+            '',
+            "Build and consumers: $env:BUILD_OUTCOME",
+            "Diagnostics upload: $env:LOGS_OUTCOME",
+            "Cork package upload: $env:PACKAGE_OUTCOME"
+          ) | Add-Content $env:GITHUB_STEP_SUMMARY
+          if (-not $passed) { exit 1 }
