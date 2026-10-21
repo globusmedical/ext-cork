@@ -1,0 +1,9 @@
+LIBRARY cork
+EXPORTS
+    ?freeCorkTriMesh@@YAXPEAUCorkTriMesh@@@Z
+    ?isSolid@@YA_NUCorkTriMesh@@@Z
+    ?computeUnion@@YAXUCorkTriMesh@@0PEAU1@@Z
+    ?computeDifference@@YAXUCorkTriMesh@@0PEAU1@@Z
+    ?computeIntersection@@YAXUCorkTriMesh@@0PEAU1@@Z
+    ?computeSymmetricDifference@@YAXUCorkTriMesh@@0PEAU1@@Z
+    ?resolveIntersections@@YAXUCorkTriMesh@@0PEAU1@@Z

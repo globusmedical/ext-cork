@@ -4,6 +4,9 @@ depend/
 include/
 lib/
 obj/
+build/
+install/
+CMakeUserPresets.json
 
 error_log.txt
 
