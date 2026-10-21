@@ -1,0 +1,7 @@
+{
+    "name": "cork",
+    "version": "0.0.1",
+    "dependencies": [
+        "mpir"
+    ]
+}

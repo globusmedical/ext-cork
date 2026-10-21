@@ -1,0 +1,15 @@
+cmake_minimum_required(VERSION 3.31)
+
+set(ENV{WindowsSDKVersion} "10.0.26100.0\\")
+set(ENV{UCRTVersion} "10.0.26100.0")
+include("${CMAKE_CURRENT_LIST_DIR}/../../cmake/triplets/x64-windows-v140.cmake")
+include("${SDK_HELPER}")
+vcpkg_get_windows_sdk(selected_sdk)
+
+if(NOT selected_sdk STREQUAL "10.0.17763.0")
+    message(FATAL_ERROR "MSBuild selected SDK ${selected_sdk}, expected 10.0.17763.0")
+endif()
+if(NOT "$ENV{UCRTVersion}" STREQUAL "10.0.17763.0")
+    message(FATAL_ERROR "UCRT version does not match the selected SDK")
+endif()
+message(STATUS "v140 MSBuild SDK and UCRT selection: ${selected_sdk}")
